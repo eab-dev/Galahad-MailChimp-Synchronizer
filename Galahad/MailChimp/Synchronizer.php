@@ -170,12 +170,12 @@ abstract class Galahad_MailChimp_Synchronizer
 		do {
 			$batch = $this->_mailChimp->listMembers($listId, 'subscribed', null, $start, $this->_batchSize);
 			$start++;
-			foreach ($batch as $row) {
+			foreach ($batch['data'] as $row) {
 				if (!$this->userExists($row['email'], $listId)) {
 					$unsubscribe[] = $row['email'];
 				}
 			}
-		} while (count($batch) == $this->_batchSize);
+		} while (count($batch['data']) == $this->_batchSize);
 		
 		$unsubscribe = array_chunk($unsubscribe, $this->_batchSize);
 		foreach ($unsubscribe as $i => $batch) {
@@ -215,8 +215,9 @@ abstract class Galahad_MailChimp_Synchronizer
 			if ($this->_mailChimp->errorCode) {
 				throw new Galahad_MailChimp_Synchronizer_Exception('Error with batch subscribe: ' . $this->_mailChimp->errorMessage);
 			} else {
-				$this->_batchLog[] = "Subscribe Batch {$batch}: {$batchResult['success_count']} Succeeded";
-				$this->_batchLog[] = "Subscribe Batch {$batch}: {$batchResult['error_count']} Failed";
+				$this->_batchLog[] = "Subscribe Batch {$batch}: {$batchResult['update_count']} subscribers successfully updated";
+				$this->_batchLog[] = "Subscribe Batch {$batch}: {$batchResult['add_count']} subscribers successfully added";
+				$this->_batchLog[] = "Subscribe Batch {$batch}: {$batchResult['error_count']} emails failed during addition/updating";
 				if ($batchResult['error_count']) {
 					$this->_batchErrors["Subscribe Batch {$batch}"] = $batchResult['errors'];
 				}
